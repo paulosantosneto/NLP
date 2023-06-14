@@ -5,5 +5,5 @@
 
 ## Architecture
 
-![](https://github.com/paulosantosneto/NLP/tree/main/word2vec/architecture.jpg)
+![](https://github.com/paulosantosneto/NLP/blob/main/word2vec/architecture.jpg)
 
