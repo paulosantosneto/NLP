@@ -27,7 +27,7 @@ class SkipGram(nn.Module):
         x = self.hidden_activation(x)
         x = self.second_layer(x)
         x = x.view(self.context_size, self.vocab_size)
-        
+
         return x
 
 def train_model(context_data: list, model: torch.nn.Sequential, loss_fn: any, optimizer: any, epochs:int):
@@ -95,6 +95,6 @@ if __name__ == '__main__':
         plot_pca(vocab, model.embeddings.weight.detach()) 
     
     # example of inference. 
-    test_word = 'AI'
+    test_word = 'AI'.lower()
     X = torch.tensor(word2idx[test_word], dtype=torch.long)
     print([idx2word[idx] for idx in torch.argmax(model(X), dim=1).numpy()])

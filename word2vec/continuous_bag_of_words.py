@@ -12,8 +12,6 @@ class CBOW(nn.Module):
 
     def __init__(self, vocab_size: int, embedding_size: int):
         super(CBOW, self).__init__()
-        self.vocab_size = vocab_size
-        self.embedding_size = embedding_size
 
         self.embeddings = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_size)
         self.first_layer = nn.Linear(in_features=embedding_size, out_features=128)
@@ -93,7 +91,7 @@ if __name__ == '__main__':
         plot_pca(vocab, model.embeddings.weight.detach()) 
     
     # example of inference. 
-    context_test = ['Artificial','Intelligence', 'has', 'emerged']
+    context_test = [word.lower() for word in ['Artificial','Intelligence', 'has', 'emerged']]
     X = torch.tensor([word2idx[word] for word in context_test], dtype=torch.long)
     print(idx2word[torch.argmax(model(X)).item()])
 
