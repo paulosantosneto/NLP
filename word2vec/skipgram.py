@@ -1,6 +1,6 @@
 import torch
-import numpy as np
 import torch.nn as nn
+import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from tqdm import tqdm
@@ -8,25 +8,25 @@ from sklearn.decomposition import PCA
 
 from utils import *
 
-class CBOW(nn.Module):
+class SkipGram(nn.Module):
 
-    def __init__(self, vocab_size: int, embedding_size: int):
-        super(CBOW, self).__init__()
+    def __init__(self, vocab_size: int, embedding_size: int, context_size: int):
+        super(SkipGram, self).__init__()
         self.vocab_size = vocab_size
-        self.embedding_size = embedding_size
+        self.context_size = context_size 
 
         self.embeddings = nn.Embedding(num_embeddings=vocab_size, embedding_dim=embedding_size)
         self.first_layer = nn.Linear(in_features=embedding_size, out_features=128)
         self.hidden_activation = nn.ReLU()
-        self.second_layer = nn.Linear(in_features=128, out_features=vocab_size)
+        self.second_layer = nn.Linear(in_features=128, out_features=context_size * vocab_size)
         self.out_activation = nn.LogSoftmax(dim=-1)
 
     def forward(self, x):
-        x = self.embeddings(x).sum(axis=0)[None]
+        x = self.embeddings(x)
         x = self.first_layer(x)
         x = self.hidden_activation(x)
         x = self.second_layer(x)
-        x = self.out_activation(x)
+        x = x.view(self.context_size, self.vocab_size)
         
         return x
 
@@ -47,9 +47,9 @@ def train_model(context_data: list, model: torch.nn.Sequential, loss_fn: any, op
             cword = torch.tensor([word2idx[cword]], dtype=torch.long)
             
             # passes the context to the model and returns a vector of the vocabulary size with the probabilites.
-            probs = model(context)
+            probs = model(cword)
             
-            local_loss += loss_fn(probs, cword)
+            local_loss += loss_fn(probs, context)
             
         print(f'Epochs: {epoch} | Loss: {local_loss.item():.2f}')
         loss_history.append(local_loss.item())
@@ -58,10 +58,11 @@ def train_model(context_data: list, model: torch.nn.Sequential, loss_fn: any, op
         local_loss.backward()
         optimizer.step()
         
-    return loss_history
+    return loss_history  
+    
 
 if __name__ == '__main__':
-    
+
     args = get_args()
     
     # loads the texts and defines the vocabulary (unique word).
@@ -78,11 +79,12 @@ if __name__ == '__main__':
 
     VOCAB_SIZE = len(vocab)
     EMBEDDING_SIZE = args.embedding_size
+    context_size = args.sliding_window * 2
     
-    model = CBOW(VOCAB_SIZE, EMBEDDING_SIZE)
+    model = SkipGram(VOCAB_SIZE, EMBEDDING_SIZE, context_size)
 
     # defines the optimizer and loss function.
-    loss_fn = nn.NLLLoss()
+    loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
     loss_history = train_model(context_representation, model, loss_fn, optimizer, args.epochs) 
@@ -93,8 +95,6 @@ if __name__ == '__main__':
         plot_pca(vocab, model.embeddings.weight.detach()) 
     
     # example of inference. 
-    context_test = ['Artificial','Intelligence', 'has', 'emerged']
-    X = torch.tensor([word2idx[word] for word in context_test], dtype=torch.long)
-    print(idx2word[torch.argmax(model(X)).item()])
-
-
+    test_word = 'AI'
+    X = torch.tensor(word2idx[test_word], dtype=torch.long)
+    print([idx2word[idx] for idx in torch.argmax(model(X), dim=1).numpy()])
