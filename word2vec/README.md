@@ -7,6 +7,6 @@ Complementary readings: [CS224N Winter 2019](https://web.stanford.edu/class/arch
 
 ## Architecture
 
-![](https://github.com/paulosantosneto/NLP/blob/main/arch.jpg)
+![](https://github.com/paulosantosneto/NLP/blob/main/word2vec/arch.jpg)
 
 
